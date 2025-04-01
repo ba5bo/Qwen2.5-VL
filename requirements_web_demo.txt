@@ -7,7 +7,7 @@ torch==2.4.0
 torchvision==0.19.0
 git+https://github.com/huggingface/transformers.git
 accelerate
-autoawq>=0.1.8
+#autoawq>=0.1.8
 av
 
 # Optional dependency
