@@ -54,9 +54,11 @@ def _load_model_processor(args):
     device_map = {
         "": "auto" if not args.cpu_only else "cpu"
     }
-
-    device_map=None
-    tp_plan="auto"
+    tp_plan=None
+    device_map="auto"
+    #device_map=None
+    #tp_plan="auto"
+    
     
     # 检查CUDA可用性
     if not args.cpu_only:
