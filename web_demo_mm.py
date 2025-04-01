@@ -8,10 +8,13 @@ import re
 from argparse import ArgumentParser
 from threading import Thread
 
+import accelerate
 import gradio as gr
 import torch
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration, TextIteratorStreamer
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 DEFAULT_CKPT_PATH = 'Qwen/Qwen2.5-VL-7B-Instruct'
 
@@ -40,6 +43,8 @@ def _get_args():
                         help='Automatically launch the interface in a new tab on the default browser.')
     parser.add_argument('--server-port', type=int, default=7860, help='Demo server port.')
     parser.add_argument('--server-name', type=str, default='127.0.0.1', help='Demo server name.')
+    parser.add_argument('--timeout', type=int, default=120, help='session timeout in seconds')
+    parser.add_argument('--max-new-words', type=int, default=512, help='session timeout in seconds')
 
     args = parser.parse_args()
     return args
@@ -47,12 +52,20 @@ def _get_args():
 
 def _load_model_processor(args):
     device_map = {
-        "": "cuda:0" if not args.cpu_only else "cpu"
+        "": "auto" if not args.cpu_only else "cpu"
     }
+
+    device_map=None
+    tp_plan="auto"
     
     # 检查CUDA可用性
-    if not args.cpu_only and not torch.cuda.is_available():
-        raise RuntimeError("CUDA设备不可用，请添加--cpu-only参数运行")
+    if not args.cpu_only:
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA设备不可用，请添加--cpu-only参数运行")
+        else:
+            logging.info(f'cuda available! {torch.cuda.device_count()} devices!')
+            
+
     # Check if flash-attn2 flag is enabled and load model accordingly
     torch_dtype=torch.bfloat16 if not args.cpu_only else torch.float32
     if args.flash_attn2:
@@ -60,7 +73,7 @@ def _load_model_processor(args):
                                                                 attn_implementation='flash_attention_2',
                                                                 device_map=device_map,torch_dtype=torch_dtype)
     else:
-        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(args.checkpoint_path, device_map=device_map,torch_dtype=torch_dtype)
+        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(args.checkpoint_path, device_map=device_map,tp_plan=tp_plan,torch_dtype=torch_dtype)
 
     processor = AutoProcessor.from_pretrained(args.checkpoint_path)
     return model, processor
@@ -149,16 +162,16 @@ def _launch_demo(args, model, processor):
 
         tokenizer = processor.tokenizer
         # streamer = TextIteratorStreamer(tokenizer, timeout=20.0, skip_prompt=True, skip_special_tokens=True)
-        streamer = TextIteratorStreamer(tokenizer, timeout=120.0, skip_prompt=True, skip_special_tokens=True)
+        streamer = TextIteratorStreamer(tokenizer, timeout=args.timeout, skip_prompt=True, skip_special_tokens=True)
 
-        gen_kwargs = {'max_new_tokens': 512, 'streamer': streamer, **inputs}
+        gen_kwargs = {'max_new_tokens': args.max_new_words, 'streamer': streamer, **inputs}
 
         thread = Thread(target=model.generate, kwargs=gen_kwargs)
         thread.start()
 
         generated_text = ''
         for new_text in streamer:
-#            print('new_text',new_text)
+#            logging.info('new_text',new_text)
             generated_text += new_text
             yield generated_text
 
@@ -172,7 +185,7 @@ def _launch_demo(args, model, processor):
                 _chatbot.pop()
                 task_history.pop()
                 return _chatbot
-            print('User: ' + _parse_text(query))
+            logging.info('User: ' + _parse_text(query))
             history_cp = copy.deepcopy(task_history)
             full_response = ''
             messages = []
@@ -197,7 +210,7 @@ def _launch_demo(args, model, processor):
                 full_response = _parse_text(response)
 
             task_history[-1] = (query, full_response)
-            print('Qwen-VL-Chat: ' + _parse_text(full_response))
+            logging.info('Qwen-VL-Chat: ' + _parse_text(full_response))
             yield _chatbot
 
         return predict
