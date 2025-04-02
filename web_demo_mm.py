@@ -15,6 +15,10 @@ from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration, Text
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"]="expandable_segments:True"
+
+
 DEFAULT_CKPT_PATH = 'Qwen/Qwen2.5-VL-7B-Instruct'
 
 
@@ -53,17 +57,13 @@ def _load_model_processor(args):
     
     
     device_map = "auto" if not args.cpu_only else "cpu"
-    device_map = {
-        "": "cuda:0" if not args.cpu_only else "cpu"
-    }
-    
     
     # 检查CUDA可用性
     if not args.cpu_only:
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA设备不可用，请添加--cpu-only参数运行")
         else:
-            logging.info(f'torch cuda ok! {torch.cuda.device_count()} devices, {[torch.cuda.mem_get_info(i) for i in range(0,torch.cuda.device_count())]} ')
+            logging.info(f'torch cuda ok! {torch.cuda.device_count()} devices, memory(free/all) for devices:{[torch.cuda.mem_get_info(i) for i in range(0,torch.cuda.device_count())]} ')
     # Check if flash-attn2 flag is enabled and load model accordingly
     torch_dtype=torch.bfloat16 if not args.cpu_only else torch.float32
     if args.flash_attn2:
@@ -302,6 +302,7 @@ including hate speech, violence, pornography, deception, etc. \
         inbrowser=args.inbrowser,
         server_port=args.server_port,
         server_name=args.server_name,
+        debug=True
     )
 
 

@@ -1,6 +1,7 @@
 # Core dependencies
-gradio==5.4.0
-gradio_client==1.4.2
+pydantic==2.10.5  #  auto install 2.11.1 will leads to additionalProperties=true cause gradio get_api_info fail, by mr ba5bo 20250402
+gradio==5.21.0
+gradio_client==1.7.2
 qwen-vl-utils==0.0.10
 transformers-stream-generator==0.0.4
 torch==2.4.0

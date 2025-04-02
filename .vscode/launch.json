@@ -12,7 +12,7 @@
             "program": "web_demo_mm.py",
             "console": "integratedTerminal",
             //"args": "--checkpoint-path ~/.ollama/models/modelscope/Qwen2.5-VL-7B-Instruct --flash-attn2" //RuntimeError: FlashAttention only supports Ampere GPUs or newer.
-            "args": "--checkpoint-path ~/.ollama/models/modelscope/Qwen2.5-VL-7B-Instruct --timeout=3600 --max-new-words=128000  --server-name=0.0.0.0 --server-port=7862"  ,
+            "args": "--checkpoint-path ~/.ollama/models/modelscope/Qwen2.5-VL-7B-Instruct --timeout=3600 --max-new-words=128000  --server-name=0.0.0.0 --server-port=7860"  ,
             "justMyCode": false
         },
         {
