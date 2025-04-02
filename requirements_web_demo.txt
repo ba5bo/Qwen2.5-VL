@@ -11,6 +11,11 @@ accelerate
 #autoawq>=0.1.8
 av
 
+optimum //for q4 quantitive
+auto-gptq // is better than gptqmodel in memory usage
+
+wheel
+
 # Optional dependency
 # Uncomment the following line if you need flash-attn
-# flash-attn==2.6.1
+flash-attn==2.6.1

@@ -16,6 +16,14 @@
             "justMyCode": false
         },
         {
+            "name": "Qwen2.5-VL-7B-Instruct-GPTQ-Int4",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "web_demo_mm.py",
+            "console": "integratedTerminal",
+            "args": "--checkpoint-path ~/.ollama/models/modelscope/ChineseAlpacaGroup/Qwen2.5-VL-7B-Instruct-GPTQ-Int4 --timeout=3600 --max-new-words=128000  --server-name=0.0.0.0"  
+        },
+        {
             "name": "Qwen2.5-VL-7B-Instruct-AWQ",
             "type": "debugpy",
             "request": "launch",
